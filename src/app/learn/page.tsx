@@ -137,6 +137,45 @@ export default function LearnPage() {
                   </div>
                   
                   <div className="space-y-4">
+                    {/* Adaptive Mode Button */}
+                    <motion.div
+                      initial={{ opacity: 0, x: 30 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.15, duration: 0.5 }}
+                      whileHover={{ x: 8, transition: { duration: 0.2 } }}
+                    >
+                      <Link
+                        href={`/learn/${category.id}/adaptive`}
+                        className="flex items-center justify-between p-5 rounded-2xl bg-gradient-to-r from-yellow-50 to-orange-50 hover:from-yellow-100 hover:to-orange-100 border-2 border-yellow-200 hover:border-yellow-400 transition-all group/level shadow-md hover:shadow-lg"
+                      >
+                        <div className="flex items-center space-x-4">
+                          <motion.div
+                            whileHover={{ scale: 1.2, rotate: 360 }}
+                            transition={{ duration: 0.5 }}
+                            className="bg-gradient-to-r from-yellow-400 to-orange-500 p-2 rounded-xl shadow-sm"
+                          >
+                            <Sparkles className="w-5 h-5 text-white" />
+                          </motion.div>
+                          <div>
+                            <span className="font-bold text-orange-600 group-hover/level:text-orange-700 text-lg block">
+                              AI Adaptive Mode ✨
+                            </span>
+                            <span className="text-xs text-orange-500/80">
+                              Auto-adjusts difficulty based on your weak points
+                            </span>
+                          </div>
+                        </div>
+                        
+                        <motion.div
+                          whileHover={{ x: 5 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <ArrowRight className="w-6 h-6 text-orange-400 group-hover/level:text-orange-600 transition-colors" />
+                        </motion.div>
+                      </Link>
+                    </motion.div>
+
+                    {/* Standard Levels */}
                     {category.levels.map((level, levelIndex) => (
                       <motion.div
                         key={level}

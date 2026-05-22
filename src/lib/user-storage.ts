@@ -434,3 +434,76 @@ export function resetAllData(): void {
   if (typeof window === 'undefined') return
   Object.values(KEYS).forEach((key) => localStorage.removeItem(key))
 }
+
+// ─── Adaptive Learning ───────────────────────────────────
+
+import { VocabularyTerm } from '@/types'
+
+export function getWeakTerms(category: string): { termId: string; wrongCount: number }[] {
+  const sessions = getSessions().filter(s => s.category === category)
+  const wrongCounts: Record<string, number> = {}
+
+  sessions.forEach(session => {
+    session.results.forEach(result => {
+      if (!result.isCorrect) {
+        wrongCounts[result.termId] = (wrongCounts[result.termId] || 0) + 1
+      } else {
+        // If they get it right later, decrease the wrong count
+        if (wrongCounts[result.termId]) {
+          wrongCounts[result.termId] -= 1
+        }
+      }
+    })
+  })
+
+  return Object.entries(wrongCounts)
+    .filter(([_, count]) => count > 0)
+    .map(([termId, wrongCount]) => ({ termId, wrongCount }))
+    .sort((a, b) => b.wrongCount - a.wrongCount) // sort by most wrong
+}
+
+export function getAdaptiveLevel(category: string): 'beginner' | 'intermediate' | 'advanced' {
+  const stats = getOverallStats().categoryStats[category]
+  if (!stats || stats.quizzesTaken < 2) return 'beginner'
+  
+  if (stats.avgScore >= 85) return 'advanced'
+  if (stats.avgScore >= 60) return 'intermediate'
+  return 'beginner'
+}
+
+export function getAdaptiveTerms(category: string, count: number = 10): { terms: VocabularyTerm[], level: string } {
+  const allCategoryTerms = vocabularyDatabase.filter(t => t.category === category)
+  if (allCategoryTerms.length === 0) return { terms: [], level: 'beginner' }
+
+  const targetLevel = getAdaptiveLevel(category)
+  const weakTermData = getWeakTerms(category)
+  const masteredIds = getMasteredTermsByCategory(category)
+
+  // 1. Prioritize weak terms from any level
+  const weakTerms = weakTermData
+    .map(w => allCategoryTerms.find(t => t.id === w.termId))
+    .filter((t): t is VocabularyTerm => t !== undefined)
+  
+  // 2. Add terms from the target level that are not mastered
+  const targetLevelTerms = allCategoryTerms
+    .filter(t => t.difficulty === targetLevel && !masteredIds.includes(t.id) && !weakTerms.some(wt => wt.id === t.id))
+    .sort(() => Math.random() - 0.5)
+
+  // 3. If we still need more, add random unmastered terms
+  const unmasteredTerms = allCategoryTerms
+    .filter(t => !masteredIds.includes(t.id) && !weakTerms.some(wt => wt.id === t.id) && !targetLevelTerms.some(tt => tt.id === t.id))
+    .sort(() => Math.random() - 0.5)
+
+  // 4. If we STILL need more, add random terms (including mastered ones)
+  const fillerTerms = allCategoryTerms
+    .filter(t => !weakTerms.some(wt => wt.id === t.id) && !targetLevelTerms.some(tt => tt.id === t.id) && !unmasteredTerms.some(ut => ut.id === t.id))
+    .sort(() => Math.random() - 0.5)
+
+  // Combine them all
+  let finalTerms = [...weakTerms, ...targetLevelTerms, ...unmasteredTerms, ...fillerTerms].slice(0, count)
+
+  // Shuffle the final list so weak terms aren't always exactly at the start
+  finalTerms = finalTerms.sort(() => Math.random() - 0.5)
+
+  return { terms: finalTerms, level: targetLevel }
+}

@@ -8,7 +8,7 @@ import Link from 'next/link'
 import { getTermsByCategoryAndDifficulty, vocabularyDatabase } from '@/lib/vocabulary-data'
 import { generateQuiz, calculateScore, getPerformanceFeedback } from '@/lib/quiz-generator'
 import { QuizQuestion, QuizResult } from '@/types'
-import { saveQuizResult as saveToStorage, getOrCreateUser } from '@/lib/user-storage'
+import { saveQuizResult as saveToStorage, getOrCreateUser, getAdaptiveTerms } from '@/lib/user-storage'
 
 export default function QuizPage() {
   const params = useParams()
@@ -27,7 +27,12 @@ export default function QuizPage() {
   const [isSaving, setIsSaving] = useState(false)
 
   useEffect(() => {
-    const terms = getTermsByCategoryAndDifficulty(category, level)
+    let terms;
+    if (level === 'adaptive') {
+      terms = getAdaptiveTerms(category).terms;
+    } else {
+      terms = getTermsByCategoryAndDifficulty(category, level);
+    }
     const shuffledTerms = [...terms].sort(() => Math.random() - 0.5)
     const quiz = generateQuiz(shuffledTerms, vocabularyDatabase, 10)
     setQuestions(quiz)

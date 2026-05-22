@@ -6,6 +6,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { ArrowLeft, Play, BookOpen, Trophy, Sparkles, Zap, Star } from 'lucide-react'
 import Link from 'next/link'
 import { getTermsByCategoryAndDifficulty } from '@/lib/vocabulary-data'
+import { getAdaptiveTerms } from '@/lib/user-storage'
 import { VocabularyTerm } from '@/types'
 
 export default function CategoryLevelPage() {
@@ -18,8 +19,13 @@ export default function CategoryLevelPage() {
   const [selectedTermIndex, setSelectedTermIndex] = useState<number | null>(null)
 
   useEffect(() => {
-    const fetchedTerms = getTermsByCategoryAndDifficulty(category, level)
-    setTerms(fetchedTerms)
+    if (level === 'adaptive') {
+      const { terms: adaptiveTerms } = getAdaptiveTerms(category)
+      setTerms(adaptiveTerms)
+    } else {
+      const fetchedTerms = getTermsByCategoryAndDifficulty(category, level)
+      setTerms(fetchedTerms)
+    }
   }, [category, level])
 
   const categoryInfo = {
@@ -84,12 +90,19 @@ export default function CategoryLevelPage() {
                 transition={{ delay: 0.3 }}
                 className="flex items-center space-x-3"
               >
-                <span className={`px-4 py-1.5 rounded-full text-sm font-bold bg-gradient-to-r ${currentCategory?.color} text-white shadow-lg`}>
-                  {level.charAt(0).toUpperCase() + level.slice(1)}
-                </span>
+                {level === 'adaptive' ? (
+                  <div className="flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-bold bg-gradient-to-r from-yellow-400 to-orange-500 text-white shadow-lg">
+                    <Sparkles className="w-4 h-4" />
+                    <span>AI Adaptive ✨</span>
+                  </div>
+                ) : (
+                  <span className={`px-4 py-1.5 rounded-full text-sm font-bold bg-gradient-to-r ${currentCategory?.color} text-white shadow-lg`}>
+                    {level.charAt(0).toUpperCase() + level.slice(1)} Level
+                  </span>
+                )}
                 <span className="text-gray-600 flex items-center space-x-2">
                   <BookOpen className="w-4 h-4" />
-                  <span className="font-semibold">{terms.length} terms</span>
+                  <span>{terms.length} terms</span>
                 </span>
               </motion.div>
             </div>
