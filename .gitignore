@@ -38,4 +38,6 @@ FEATURES.md
 PROJECT_SUMMARY.md
 SETUP.md
 DATABASE_SETUP_COMPLETE.txt
-database/README.md
+
+# database files (local development only)
+/database/
