@@ -32,3 +32,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# planning and documentation
+FEATURES.md
+PROJECT_SUMMARY.md
+SETUP.md
+DATABASE_SETUP_COMPLETE.txt
+database/README.md
